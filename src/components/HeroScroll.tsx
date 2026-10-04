@@ -16,46 +16,78 @@ interface HeroScrollProps {
 export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddToCart }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const mainProduct = IPHONE_PRODUCTS[0]; // iPhone 18 Pro Max / 16 Pro
 
   const [selectedColor, setSelectedColor] = useState(mainProduct.colors[0]);
 
   useEffect(() => {
     const video = videoRef.current;
+    const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!video || !container) return;
+    if (!video || !canvas || !container) return;
 
-    // Load video metadata to get duration
-    const setupScrollTrigger = () => {
-      if (!video.duration) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-      const ctx = gsap.context(() => {
-        // GSAP ScrollTrigger to scrub video.currentTime frame-by-frame
-        gsap.to(video, {
-          currentTime: video.duration,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: container,
-            start: 'top top',
-            end: 'bottom bottom',
-            scrub: 1.2, // Smooth catch-up scrub animation
-            pin: true,  // Pin video during scroll progression
-          },
-        });
-      }, container);
+    let targetTime = 0;
+    let rafId: number;
 
-      return () => ctx.revert();
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Ultra-smooth 60fps LERP Canvas Render Loop
+    const renderLoop = () => {
+      if (video.duration) {
+        const current = video.currentTime;
+        const diff = targetTime - current;
+
+        // Smoothly interpolate time (18% step per frame for instant response)
+        if (Math.abs(diff) > 0.003) {
+          video.currentTime = current + diff * 0.18;
+        }
+
+        // Draw hardware-accelerated video frame onto Canvas
+        try {
+          // Maintain aspect ratio cover fill
+          const vWidth = video.videoWidth || canvas.width;
+          const vHeight = video.videoHeight || canvas.height;
+          const scale = Math.max(canvas.width / vWidth, canvas.height / vHeight);
+          const x = (canvas.width / 2) - (vWidth / 2) * scale;
+          const y = (canvas.height / 2) - (vHeight / 2) * scale;
+
+          ctx.drawImage(video, x, y, vWidth * scale, vHeight * scale);
+        } catch {
+          // Ignore transient decode frame pauses
+        }
+      }
+      rafId = requestAnimationFrame(renderLoop);
     };
 
-    if (video.readyState >= 1) {
-      setupScrollTrigger();
-    } else {
-      video.addEventListener('loadedmetadata', setupScrollTrigger);
-    }
+    rafId = requestAnimationFrame(renderLoop);
+
+    // GSAP ScrollTrigger Updates targetTime continuously as user scrolls
+    const trigger = ScrollTrigger.create({
+      trigger: container,
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.3,
+      pin: true,
+      onUpdate: (self) => {
+        if (video.duration) {
+          targetTime = self.progress * video.duration;
+        }
+      },
+    });
 
     return () => {
-      video.removeEventListener('loadedmetadata', setupScrollTrigger);
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+      cancelAnimationFrame(rafId);
+      trigger.kill();
+      window.removeEventListener('resize', resizeCanvas);
     };
   }, []);
 
@@ -72,24 +104,29 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
   };
 
   return (
-    <section id="hero" ref={containerRef} className="relative min-h-[220vh] bg-black text-[#F5F5F7]">
-      {/* Pinned Sticky Fullscreen Video Showcase */}
+    <section id="hero" ref={containerRef} className="relative min-h-[250vh] bg-black text-[#F5F5F7]">
+      {/* Hidden Offscreen HTML5 Video Buffer */}
+      <video
+        ref={videoRef}
+        src="/hero-video.mp4"
+        muted
+        playsInline
+        preload="auto"
+        className="hidden"
+      />
+
+      {/* Pinned Sticky Fullscreen Canvas & Overlay */}
       <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden">
         
-        {/* Background GSAP Scroll-Scrubbed Video */}
-        <div className="absolute inset-0 z-0 bg-black flex items-center justify-center overflow-hidden">
-          <video
-            ref={videoRef}
-            src="/hero-video.mp4"
-            muted
-            playsInline
-            preload="auto"
-            className="w-full h-full object-cover filter brightness-[0.9] opacity-90 transition-all"
-          />
-          {/* Apple Gradient Vignette Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/70 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 pointer-events-none" />
-        </div>
+        {/* Hardware-Accelerated 60fps Smooth Canvas */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-0 w-full h-full object-cover filter brightness-[0.88] opacity-90"
+        />
+
+        {/* Apple Vignette Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/70 pointer-events-none z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 pointer-events-none z-0" />
 
         {/* Foreground Content Overlays */}
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
@@ -98,10 +135,10 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-orange-600/30 border border-amber-400/40 backdrop-blur-xl text-xs font-bold uppercase tracking-wider text-amber-300 mb-4 shadow-xl"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-orange-600/30 border border-amber-400/40 backdrop-blur-xl text-xs font-bold uppercase tracking-wider text-amber-300 mb-4 shadow-2xl"
           >
             <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>🔥 Ofertas Especiales — Scrollea para ver el video avance</span>
+            <span>🔥 Oferta Especial — Video Avance 60FPS con Scroll</span>
           </motion.div>
 
           {/* Title */}
@@ -118,8 +155,8 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
           </motion.h1>
 
           {/* Tagline */}
-          <p className="mt-4 text-xs sm:text-base text-neutral-300 max-w-xl font-medium drop-shadow-md">
-            Video interactivo avance con scroll (GSAP ScrollTrigger). Equipos 100% sellados con 1 año de garantía oficial Apple.
+          <p className="mt-4 text-xs sm:text-base text-neutral-200 max-w-xl font-medium drop-shadow-md">
+            Desliza suavemente hacia abajo para controlar la reproducción del video en tiempo real.
           </p>
 
           {/* Interactive Color Selector */}
@@ -169,7 +206,7 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
           {/* Scroll Down Indicator */}
           <div className="mt-8 flex items-center gap-2 text-xs font-bold text-amber-400 tracking-wider animate-bounce">
             <Sparkles className="w-4 h-4" />
-            <span>Desliza para avanzar el video cuadro a cuadro</span>
+            <span>Desliza para avanzar el video suavemente</span>
             <ArrowDown className="w-4 h-4" />
           </div>
 
