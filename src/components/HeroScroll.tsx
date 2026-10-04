@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ShoppingBag, ShoppingCart, ArrowDown, Clock, Sparkles } from 'lucide-react';
+import { ShoppingBag, ShoppingCart, ArrowDown } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { IPHONE_PRODUCTS } from '../data/iphones';
 import type { CartItem } from '../types';
 
 gsap.registerPlugin(ScrollTrigger);
+// Evita recálculos cuando la barra de direcciones del móvil aparece/desaparece
+ScrollTrigger.config({ ignoreMobileResize: true });
+
+// Secuencia extraída de hero-video.mp4 (8 s × 24 fps) con ffmpeg
+const FRAME_COUNT = 192;
+const frameSrc = (i: number) => `/hero-frames/frame_${String(i + 1).padStart(4, '0')}.webp`;
 
 interface HeroScrollProps {
   onOpenOrderModal: (modelName?: string) => void;
@@ -14,80 +19,116 @@ interface HeroScrollProps {
 }
 
 export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddToCart }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mainProduct = IPHONE_PRODUCTS[0]; // iPhone 18 Pro Max / 16 Pro
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const mainProduct = IPHONE_PRODUCTS[0];
 
   const [selectedColor, setSelectedColor] = useState(mainProduct.colors[0]);
+  const [loadedPct, setLoadedPct] = useState(0);
 
   useEffect(() => {
-    const video = videoRef.current;
     const canvas = canvasRef.current;
     const container = containerRef.current;
-    if (!video || !canvas || !container) return;
-
+    const overlay = overlayRef.current;
+    if (!canvas || !container || !overlay) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let targetTime = 0;
-    let rafId: number;
+    const images: HTMLImageElement[] = new Array(FRAME_COUNT);
+    const ready: boolean[] = new Array(FRAME_COUNT).fill(false);
+    const state = { frame: 0 };
+    let lastDrawn = -1;
+    let loaded = 0;
+    let cancelled = false;
 
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+    // Dibuja el frame con ajuste "cover"; si aún no cargó, usa el más cercano anterior
+    const render = (force = false) => {
+      let i = Math.round(state.frame);
+      while (i > 0 && !ready[i]) i--;
+      if (!ready[i] || (i === lastDrawn && !force)) return;
+      const img = images[i];
+      const cw = canvas.width;
+      const ch = canvas.height;
+      const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const w = img.naturalWidth * scale;
+      const h = img.naturalHeight * scale;
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+      lastDrawn = i;
     };
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
 
-    // Ultra-smooth 60fps LERP Canvas Render Loop
-    const renderLoop = () => {
-      if (video.duration) {
-        const current = video.currentTime;
-        const diff = targetTime - current;
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(canvas.clientWidth * dpr);
+      canvas.height = Math.round(canvas.clientHeight * dpr);
+      render(true);
+    };
 
-        // Smoothly interpolate time (18% step per frame for instant response)
-        if (Math.abs(diff) > 0.003) {
-          video.currentTime = current + diff * 0.18;
-        }
+    const loadFrame = (i: number) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = frameSrc(i);
+        images[i] = img;
+        const done = () => {
+          if (cancelled) return resolve();
+          ready[i] = !!img.naturalWidth;
+          loaded++;
+          if (loaded % 8 === 0 || loaded === FRAME_COUNT) {
+            setLoadedPct(Math.round((loaded / FRAME_COUNT) * 100));
+          }
+          render(i === 0);
+          resolve();
+        };
+        img.decode().then(done, done);
+      });
 
-        // Draw hardware-accelerated video frame onto Canvas
-        try {
-          // Maintain aspect ratio cover fill
-          const vWidth = video.videoWidth || canvas.width;
-          const vHeight = video.videoHeight || canvas.height;
-          const scale = Math.max(canvas.width / vWidth, canvas.height / vHeight);
-          const x = (canvas.width / 2) - (vWidth / 2) * scale;
-          const y = (canvas.height / 2) - (vHeight / 2) * scale;
-
-          ctx.drawImage(video, x, y, vWidth * scale, vHeight * scale);
-        } catch {
-          // Ignore transient decode frame pauses
-        }
+    // Primero el frame inicial (para pintar de inmediato), luego el resto en lotes
+    (async () => {
+      await loadFrame(0);
+      resize();
+      const BATCH = 12;
+      for (let start = 1; start < FRAME_COUNT && !cancelled; start += BATCH) {
+        const batch: Promise<void>[] = [];
+        for (let i = start; i < Math.min(start + BATCH, FRAME_COUNT); i++) batch.push(loadFrame(i));
+        await Promise.all(batch);
       }
-      rafId = requestAnimationFrame(renderLoop);
-    };
+    })();
 
-    rafId = requestAnimationFrame(renderLoop);
+    const gctx = gsap.context(() => {
+      // El scroll controla el índice del frame (scrub suave pero inmediato)
+      gsap.to(state, {
+        frame: FRAME_COUNT - 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.4,
+        },
+        onUpdate: () => render(),
+      });
 
-    // GSAP ScrollTrigger Updates targetTime continuously as user scrolls
-    const trigger = ScrollTrigger.create({
-      trigger: container,
-      start: 'top top',
-      end: 'bottom bottom',
-      scrub: 0.3,
-      pin: true,
-      onUpdate: (self) => {
-        if (video.duration) {
-          targetTime = self.progress * video.duration;
-        }
-      },
-    });
+      // El texto se desvanece al inicio para dejar ver el video
+      gsap.to(overlay, {
+        autoAlpha: 0,
+        y: -40,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: '30% top',
+          scrub: true,
+        },
+      });
+    }, container);
+
+    window.addEventListener('resize', resize);
 
     return () => {
-      cancelAnimationFrame(rafId);
-      trigger.kill();
-      window.removeEventListener('resize', resizeCanvas);
+      cancelled = true;
+      window.removeEventListener('resize', resize);
+      gctx.revert();
     };
   }, []);
 
@@ -104,112 +145,73 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
   };
 
   return (
-    <section id="hero" ref={containerRef} className="relative min-h-[250vh] bg-black text-[#F5F5F7]">
-      {/* Hidden Offscreen HTML5 Video Buffer */}
-      <video
-        ref={videoRef}
-        src="/hero-video.mp4"
-        muted
-        playsInline
-        preload="auto"
-        className="hidden"
-      />
+    <section id="hero" ref={containerRef} className="relative h-[300vh] bg-black text-[#F5F5F7]">
+      {/* Escena fija mientras se recorre la sección (sticky, sin pin de GSAP) */}
+      <div className="sticky top-0 w-full h-[100svh] overflow-hidden">
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" aria-hidden="true" />
 
-      {/* Pinned Sticky Fullscreen Canvas & Overlay */}
-      <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center overflow-hidden">
-        
-        {/* Hardware-Accelerated 60fps Smooth Canvas */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 z-0 w-full h-full object-cover filter brightness-[0.88] opacity-90"
-        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 pointer-events-none" />
 
-        {/* Apple Vignette Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/70 pointer-events-none z-0" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/60 pointer-events-none z-0" />
+        {/* Barra de carga de la secuencia */}
+        {loadedPct < 100 && (
+          <div className="absolute bottom-0 left-0 h-0.5 bg-blue-500 transition-[width] duration-300" style={{ width: `${loadedPct}%` }} />
+        )}
 
-        {/* Foreground Content Overlays */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center">
-          
-          {/* Flash Deals Pill Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-orange-600/30 border border-amber-400/40 backdrop-blur-xl text-xs font-bold uppercase tracking-wider text-amber-300 mb-4 shadow-2xl"
-          >
-            <Clock className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>🔥 Oferta Especial — Video Avance 60FPS con Scroll</span>
-          </motion.div>
-
-          {/* Title */}
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-7xl lg:text-9xl font-black tracking-tight max-w-5xl leading-tight"
-          >
+        <div
+          ref={overlayRef}
+          className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center"
+        >
+          <h1 className="text-4xl sm:text-7xl lg:text-8xl font-black tracking-tight max-w-5xl leading-tight">
             <span className="apple-titanium-gradient block">{mainProduct.name}</span>
-            <span className="text-2xl sm:text-5xl lg:text-6xl font-black mt-2 block text-emerald-400">
-              Desde ${mainProduct.basePrice} USD <span className="text-base text-neutral-400 line-through font-normal">${mainProduct.basePrice + 200} USD</span>
+            <span className="text-2xl sm:text-4xl lg:text-5xl font-bold mt-2 block text-emerald-400">
+              Desde ${mainProduct.basePrice} USD{' '}
+              <span className="text-base text-neutral-400 line-through font-normal">${mainProduct.basePrice + 200} USD</span>
             </span>
-          </motion.h1>
+          </h1>
 
-          {/* Tagline */}
-          <p className="mt-4 text-xs sm:text-base text-neutral-200 max-w-xl font-medium drop-shadow-md">
-            Desliza suavemente hacia abajo para controlar la reproducción del video en tiempo real.
+          <p className="mt-4 text-sm sm:text-base text-neutral-200 max-w-xl">
+            Sellado, con 1 año de garantía Apple y envío gratis.
           </p>
 
-          {/* Interactive Color Selector */}
-          <div className="mt-6 flex items-center gap-3 bg-[#161617]/90 p-2.5 rounded-full border border-white/15 backdrop-blur-xl shadow-2xl">
+          <div className="mt-6 flex items-center gap-3 bg-[#161617]/90 p-2.5 rounded-full border border-white/15 backdrop-blur-xl">
             <span className="text-xs font-semibold text-[#86868B] pl-3 pr-1">Color:</span>
             {mainProduct.colors.map((color) => (
               <button
                 key={color.id}
                 onClick={() => setSelectedColor(color)}
+                aria-label={color.name}
                 className={`relative w-7 h-7 rounded-full transition-all flex items-center justify-center ${
-                  selectedColor.id === color.id
-                    ? 'ring-2 ring-blue-500 scale-110 shadow-md'
-                    : 'opacity-70 hover:opacity-100'
+                  selectedColor.id === color.id ? 'ring-2 ring-blue-500 scale-110' : 'opacity-70 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: color.hex }}
-                title={color.name}
               >
-                {selectedColor.id === color.id && (
-                  <span className="w-2 h-2 rounded-full bg-white shadow-md" />
-                )}
+                {selectedColor.id === color.id && <span className="w-2 h-2 rounded-full bg-white" />}
               </button>
             ))}
-            <span className="text-xs font-bold text-white pr-3 pl-1">
-              {selectedColor.name}
-            </span>
+            <span className="text-xs font-bold text-white pr-3 pl-1">{selectedColor.name}</span>
           </div>
 
-          {/* Direct Action CTAs */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 z-20">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={() => onOpenOrderModal(mainProduct.name)}
-              className="apple-btn-blue px-7 py-3.5 text-sm font-extrabold flex items-center gap-2 shadow-xl shadow-blue-900/50"
+              className="apple-btn-blue px-7 py-3.5 text-sm font-extrabold flex items-center gap-2"
             >
               <ShoppingBag className="w-4 h-4" />
               Comprar por WhatsApp
             </button>
-
             <button
               onClick={handleQuickAdd}
-              className="px-6 py-3.5 rounded-full bg-[#161617]/90 backdrop-blur-md border border-white/20 hover:border-white/40 text-white font-bold text-sm transition-all hover:scale-105 shadow-md flex items-center gap-2"
+              className="px-6 py-3.5 rounded-full bg-[#161617]/90 backdrop-blur-md border border-white/20 hover:border-white/40 text-white font-bold text-sm transition-all flex items-center gap-2"
             >
               <ShoppingCart className="w-4 h-4 text-blue-400" />
-              Añadir al Carrito
+              Añadir al carrito
             </button>
           </div>
 
-          {/* Scroll Down Indicator */}
-          <div className="mt-8 flex items-center gap-2 text-xs font-bold text-amber-400 tracking-wider animate-bounce">
-            <Sparkles className="w-4 h-4" />
-            <span>Desliza para avanzar el video suavemente</span>
-            <ArrowDown className="w-4 h-4" />
+          <div className="mt-8 flex items-center gap-2 text-xs text-neutral-400">
+            <span>Desliza para ver el video</span>
+            <ArrowDown className="w-4 h-4 animate-bounce" />
           </div>
-
         </div>
       </div>
     </section>
