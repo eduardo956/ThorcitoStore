@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDPN8iUnEsMx_f_QML8mAdkfO4EvWTwnNo",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "thorcitostore.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "thorcitostore",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "thorcitostore.firebasestorage.app",
