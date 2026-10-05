@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Products Collection
+    // Public read: Any visitor can view store catalog products
+    // Admin write: Only authenticated store owners can create, update, or delete products
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Interactions Collection
+    // Public create: Any customer can submit WhatsApp checkout orders and inquiries
+    // Admin read/update/delete: Only authenticated store owners can view customer leads and update order status
+    match /interactions/{interactionId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}

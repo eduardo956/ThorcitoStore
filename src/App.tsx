@@ -1,36 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { AppleSubnav } from './components/AppleSubnav';
 import { HeroScroll } from './components/HeroScroll';
 import { ProductCatalog } from './components/ProductCatalog';
-import { WhatsAppModal } from './components/WhatsAppModal';
+import { SpecComparison } from './components/SpecComparison';
 import { FloatingWhatsApp } from './components/FloatingWhatsApp';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
+import { AdminPage } from './pages/AdminPage';
 import type { CartItem } from './types';
 
+const checkIsAdminRoute = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
+  return path === '/admin' || path.startsWith('/admin/') || hash === '#admin' || hash.startsWith('#admin');
+};
+
 export function App() {
-  const [modalOpen, setModalOpen] = useState(false);
+  const [isAdminView, setIsAdminView] = useState<boolean>(() => checkIsAdminRoute());
+
+  // Listen to browser Back/Forward navigation and Hash changes
+  useEffect(() => {
+    const handleNavChange = () => {
+      setIsAdminView(checkIsAdminRoute());
+    };
+
+    window.addEventListener('popstate', handleNavChange);
+    window.addEventListener('hashchange', handleNavChange);
+
+    return () => {
+      window.removeEventListener('popstate', handleNavChange);
+      window.removeEventListener('hashchange', handleNavChange);
+    };
+  }, []);
+
+  const navigateToAdmin = () => {
+    window.history.pushState(null, '', '/admin');
+    setIsAdminView(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToStore = () => {
+    window.history.pushState(null, '', '/');
+    setIsAdminView(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const [cartOpen, setCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-
-  const [selectedModel, setSelectedModel] = useState<string | undefined>();
-  const [selectedColor, setSelectedColor] = useState<string | undefined>();
-  const [selectedStorage, setSelectedStorage] = useState<string | undefined>();
-  const [calculatedPrice, setCalculatedPrice] = useState<number | undefined>();
-
-  const handleOpenOrderModal = (
-    modelName?: string,
-    colorName?: string,
-    storageSize?: string,
-    price?: number
-  ) => {
-    setSelectedModel(modelName);
-    setSelectedColor(colorName);
-    setSelectedStorage(storageSize);
-    setCalculatedPrice(price);
-    setModalOpen(true);
-  };
 
   const handleAddToCart = (newItem: CartItem) => {
     setCartItems((prevItems) => {
@@ -77,37 +94,38 @@ export function App() {
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
+  // Protected Admin View
+  if (isAdminView) {
+    return <AdminPage onBackToStore={navigateToStore} />;
+  }
+
+  // Public Retail Store View
   return (
     <div className="min-h-screen bg-black text-[#F5F5F7] font-sans selection:bg-blue-600 selection:text-white">
       {/* Top Header Navigation */}
       <Navbar
-        onOpenOrderModal={handleOpenOrderModal}
         onOpenCartDrawer={() => setCartOpen(true)}
         cartCount={totalCartCount}
       />
 
-      {/* Apple Subnav Sticky Bar */}
-      <AppleSubnav
-        onOpenOrderModal={handleOpenOrderModal}
-      />
-
       {/* Direct High-Converting Hero with Flash Deals */}
       <HeroScroll
-        onOpenOrderModal={handleOpenOrderModal}
         onAddToCart={handleAddToCart}
       />
 
       {/* Main Product Catalog & Special Offers */}
       <ProductCatalog
-        onOpenOrderModal={handleOpenOrderModal}
         onAddToCart={handleAddToCart}
       />
 
-      {/* Floating WhatsApp Button */}
+      {/* Technical Spec Comparison (Anchor: #comparison) */}
+      <SpecComparison />
+
+      {/* Floating WhatsApp Quick Action */}
       <FloatingWhatsApp />
 
-      {/* Footer with Trust Badges */}
-      <Footer />
+      {/* Footer with Trust Badges & Discrete Admin Access */}
+      <Footer onNavigateAdmin={navigateToAdmin} />
 
       {/* Streamlined Shopping Cart Drawer */}
       <CartDrawer
@@ -117,16 +135,6 @@ export function App() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onClearCart={handleClearCart}
-      />
-
-      {/* Streamlined 3-Input WhatsApp Order Modal */}
-      <WhatsAppModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        initialModelName={selectedModel}
-        initialColorName={selectedColor}
-        initialStorageSize={selectedStorage}
-        initialCalculatedPrice={calculatedPrice}
       />
     </div>
   );

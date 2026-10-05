@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ShoppingBag, ShoppingCart, ArrowDown } from 'lucide-react';
+import { ShoppingCart, ArrowDown } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IPHONE_PRODUCTS } from '../data/iphones';
+import { useProducts } from '../hooks/useProducts';
 import type { CartItem } from '../types';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,17 +14,18 @@ const FRAME_COUNT = 192;
 const frameSrc = (i: number) => `/hero-frames/frame_${String(i + 1).padStart(4, '0')}.webp`;
 
 interface HeroScrollProps {
-  onOpenOrderModal: (modelName?: string) => void;
   onAddToCart: (item: CartItem) => void;
 }
 
-export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddToCart }) => {
+export const HeroScroll: React.FC<HeroScrollProps> = ({ onAddToCart }) => {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const mainProduct = IPHONE_PRODUCTS[0];
+  const { products } = useProducts();
+  const mainProduct = [...products].sort((a, b) => b.basePrice - a.basePrice)[0];
 
-  const [selectedColor, setSelectedColor] = useState(mainProduct.colors[0]);
+  const [selectedColorId, setSelectedColorId] = useState<string | null>(null);
+  const selectedColor = mainProduct?.colors.find((c) => c.id === selectedColorId) ?? mainProduct?.colors[0];
   const [loadedPct, setLoadedPct] = useState(0);
 
   useEffect(() => {
@@ -133,16 +134,26 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
   }, []);
 
   const handleQuickAdd = () => {
+    if (!mainProduct) return;
+    const color = selectedColor ?? {
+      id: 'default',
+      name: 'Color Estándar',
+      hex: '#9F9D98',
+      bgGradient: 'from-neutral-700 to-black',
+      imageUrl: mainProduct.image,
+    };
+    const storage = mainProduct.storageOptions[0] ?? { size: 'Único', priceDelta: 0 };
     onAddToCart({
-      id: `${mainProduct.id}-${selectedColor.id}-256gb-${Date.now()}`,
+      id: `${mainProduct.id}-${color.id}-${storage.size}-${Date.now()}`,
       productId: mainProduct.id,
       productName: mainProduct.name,
-      color: selectedColor,
-      storage: mainProduct.storageOptions[0],
-      unitPrice: mainProduct.basePrice,
+      color,
+      storage,
+      unitPrice: mainProduct.basePrice + storage.priceDelta,
       quantity: 1,
     });
   };
+
 
   return (
     <section id="hero" ref={containerRef} className="relative h-[300vh] bg-black text-[#F5F5F7]">
@@ -161,52 +172,55 @@ export const HeroScroll: React.FC<HeroScrollProps> = ({ onOpenOrderModal, onAddT
           ref={overlayRef}
           className="relative z-10 h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-center"
         >
-          <h1 className="text-4xl sm:text-7xl lg:text-8xl font-black tracking-tight max-w-5xl leading-tight">
-            <span className="apple-titanium-gradient block">{mainProduct.name}</span>
-            <span className="text-2xl sm:text-4xl lg:text-5xl font-bold mt-2 block text-emerald-400">
-              Desde ${mainProduct.basePrice} USD{' '}
-              <span className="text-base text-neutral-400 line-through font-normal">${mainProduct.basePrice + 200} USD</span>
-            </span>
-          </h1>
+          {mainProduct ? (
+            <>
+              <h1 className="text-4xl sm:text-7xl lg:text-8xl font-black tracking-tight max-w-5xl leading-tight">
+                <span className="apple-titanium-gradient block">{mainProduct.name}</span>
+                <span className="text-2xl sm:text-4xl lg:text-5xl font-bold mt-2 block text-emerald-400">
+                  Desde ${mainProduct.basePrice} USD
+                </span>
+              </h1>
 
-          <p className="mt-4 text-sm sm:text-base text-neutral-200 max-w-xl">
-            Sellado, con 1 año de garantía Apple y envío gratis.
-          </p>
+              <p className="mt-4 text-sm sm:text-base text-neutral-200 max-w-xl">
+                Sellado, con 1 año de garantía Apple y envío gratis.
+              </p>
 
-          <div className="mt-6 flex items-center gap-3 bg-[#161617]/90 p-2.5 rounded-full border border-white/15 backdrop-blur-xl">
-            <span className="text-xs font-semibold text-[#86868B] pl-3 pr-1">Color:</span>
-            {mainProduct.colors.map((color) => (
-              <button
-                key={color.id}
-                onClick={() => setSelectedColor(color)}
-                aria-label={color.name}
-                className={`relative w-7 h-7 rounded-full transition-all flex items-center justify-center ${
-                  selectedColor.id === color.id ? 'ring-2 ring-blue-500 scale-110' : 'opacity-70 hover:opacity-100'
-                }`}
-                style={{ backgroundColor: color.hex }}
-              >
-                {selectedColor.id === color.id && <span className="w-2 h-2 rounded-full bg-white" />}
-              </button>
-            ))}
-            <span className="text-xs font-bold text-white pr-3 pl-1">{selectedColor.name}</span>
-          </div>
+              {mainProduct.colors.length > 0 && selectedColor && (
+                <div className="mt-6 flex items-center gap-3 bg-[#161617]/90 p-2.5 rounded-full border border-white/15 backdrop-blur-xl">
+                  <span className="text-xs font-semibold text-[#86868B] pl-3 pr-1">Color:</span>
+                  {mainProduct.colors.map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setSelectedColorId(color.id)}
+                      aria-label={color.name}
+                      className={`relative w-7 h-7 rounded-full transition-all flex items-center justify-center ${
+                        selectedColor.id === color.id ? 'ring-2 ring-blue-500 scale-110' : 'opacity-70 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                    >
+                      {selectedColor.id === color.id && <span className="w-2 h-2 rounded-full bg-white" />}
+                    </button>
+                  ))}
+                  <span className="text-xs font-bold text-white pr-3 pl-1">{selectedColor.name}</span>
+                </div>
+              )}
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button
-              onClick={() => onOpenOrderModal(mainProduct.name)}
-              className="apple-btn-blue px-7 py-3.5 text-sm font-extrabold flex items-center gap-2"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              Comprar por WhatsApp
-            </button>
-            <button
-              onClick={handleQuickAdd}
-              className="px-6 py-3.5 rounded-full bg-[#161617]/90 backdrop-blur-md border border-white/20 hover:border-white/40 text-white font-bold text-sm transition-all flex items-center gap-2"
-            >
-              <ShoppingCart className="w-4 h-4 text-blue-400" />
-              Añadir al carrito
-            </button>
-          </div>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={handleQuickAdd}
+                  className="px-6 py-3.5 rounded-full bg-[#161617]/90 backdrop-blur-md border border-white/20 hover:border-white/40 text-white font-bold text-sm transition-all flex items-center gap-2"
+                >
+                  <ShoppingCart className="w-4 h-4 text-blue-400" />
+                  Añadir al carrito
+                </button>
+              </div>
+            </>
+          ) : (
+            <h1 className="text-4xl sm:text-7xl lg:text-8xl font-black tracking-tight max-w-5xl leading-tight">
+              <span className="apple-titanium-gradient block">Jorgito Store</span>
+            </h1>
+          )}
+
 
           <div className="mt-8 flex items-center gap-2 text-xs text-neutral-400">
             <span>Desliza para ver el video</span>

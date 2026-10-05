@@ -1,8 +1,12 @@
 import React from 'react';
-import { Smartphone, ShieldCheck, Truck, Sparkles, Heart } from 'lucide-react';
+import { Smartphone, ShieldCheck, Truck, Sparkles, Heart, Lock } from 'lucide-react';
 import { STORE_PHONE_NUMBER } from '../data/iphones';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onNavigateAdmin?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
   return (
     <footer id="guarantee" className="bg-[#161617] text-[#86868B] border-t border-white/10 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -100,6 +104,23 @@ export const Footer: React.FC = () => {
           <div>
             © {new Date().getFullYear()} Jorgito Store — Todos los derechos reservados.
           </div>
+
+          {/* Discrete Admin Link */}
+          <a
+            href="/admin"
+            onClick={(e) => {
+              if (onNavigateAdmin) {
+                e.preventDefault();
+                onNavigateAdmin();
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-[11px] text-[#86868B]/60 hover:text-neutral-200 transition-colors py-1 px-2.5 rounded-lg hover:bg-white/5"
+            title="Acceso exclusivo para el propietario"
+          >
+            <Lock className="w-3 h-3 text-[#86868B]/70" />
+            <span>Acceso Administración</span>
+          </a>
+
           <div className="flex items-center gap-1 text-[#86868B]">
             Diseñado en estilo oficial Apple <Heart className="w-3.5 h-3.5 text-blue-500 fill-blue-500" />
           </div>

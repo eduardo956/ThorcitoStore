@@ -1,9 +1,15 @@
 import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { STORE_PHONE_NUMBER } from '../data/iphones';
+import { logStoreInteraction } from '../lib/interactions';
 
 export const FloatingWhatsApp: React.FC = () => {
   const handleClick = () => {
+    logStoreInteraction({
+      type: 'whatsapp_inquiry',
+      productName: 'Consulta General',
+      notes: 'Clic en botón flotante de WhatsApp',
+    });
     const msg = encodeURIComponent("¡Hola Jorgito Store! 📱 Me gustaría hacer una consulta en vivo sobre los modelos de iPhone disponibles.");
     window.open(`https://wa.me/${STORE_PHONE_NUMBER}?text=${msg}`, '_blank');
   };

@@ -4,12 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { STORE_PHONE_NUMBER } from '../data/iphones';
 
 interface NavbarProps {
-  onOpenOrderModal: (modelName?: string) => void;
   onOpenCartDrawer: () => void;
   cartCount: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenOrderModal, onOpenCartDrawer, cartCount }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onOpenCartDrawer, cartCount }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -32,9 +31,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenOrderModal, onOpenCartDraw
       <div className="bg-gradient-to-r from-neutral-900 via-neutral-800 to-neutral-900 text-xs py-2 px-4 text-center border-b border-white/10 text-neutral-300 flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 text-blue-400 animate-pulse" />
         <span>Equipos 100% Originales & Sellados — Envíos Asegurados Gratis a Todo el País</span>
-        <span className="hidden md:inline text-blue-400 font-semibold cursor-pointer hover:underline" onClick={() => onOpenOrderModal()}>
-          Pedir ahora por WhatsApp &rarr;
-        </span>
       </div>
 
       {/* Main Apple Header */}

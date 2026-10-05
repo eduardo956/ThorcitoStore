@@ -1,8 +1,16 @@
 import React from 'react';
-import { IPHONE_PRODUCTS } from '../data/iphones';
+import type { iPhoneProduct } from '../types';
+import { useProducts } from '../hooks/useProducts';
 import { Check, X, Smartphone, Cpu, Camera, Battery, Shield } from 'lucide-react';
 
-export const SpecComparison: React.FC = () => {
+interface SpecComparisonProps {
+  products?: iPhoneProduct[];
+}
+
+export const SpecComparison: React.FC<SpecComparisonProps> = ({ products: initialProducts }) => {
+  const { products: hookProducts } = useProducts();
+  const displayProducts = initialProducts && initialProducts.length > 0 ? initialProducts : hookProducts;
+
   return (
     <section id="comparison" className="py-24 bg-black text-[#F5F5F7] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,7 +34,7 @@ export const SpecComparison: React.FC = () => {
                 <th className="py-4 px-4 text-xs font-bold text-[#86868B] uppercase tracking-wider w-1/6">
                   Especificación
                 </th>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <th key={p.id} className="py-4 px-4 text-center w-1/5">
                     <div className="text-base font-extrabold text-white">{p.name}</div>
                     <div className="text-xs text-blue-400 font-mono mt-0.5">Desde ${p.basePrice} USD</div>
@@ -40,7 +48,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300 flex items-center gap-2">
                   <Smartphone className="w-4 h-4 text-blue-400" /> Pantalla
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center text-neutral-200">
                     {p.screenSize}
                   </td>
@@ -52,7 +60,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300 flex items-center gap-2">
                   <Cpu className="w-4 h-4 text-purple-400" /> Chip Principal
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center font-bold text-white">
                     {p.chip}
                   </td>
@@ -64,7 +72,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300 flex items-center gap-2">
                   <Camera className="w-4 h-4 text-amber-400" /> Cámaras
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center text-[#86868B] text-xs">
                     {p.camera}
                   </td>
@@ -76,7 +84,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300 flex items-center gap-2">
                   <Battery className="w-4 h-4 text-emerald-400" /> Batería
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center text-emerald-400 font-bold">
                     {p.batteryLife}
                   </td>
@@ -88,7 +96,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300 flex items-center gap-2">
                   <Shield className="w-4 h-4 text-neutral-400" /> Chasis
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center text-neutral-300 font-medium">
                     {p.name.includes('Pro') ? (p.name.includes('18') ? 'Titanio Naranja Cósmico' : 'Titanio Grado 5') : 'Aluminio Aeroespacial'}
                   </td>
@@ -100,7 +108,7 @@ export const SpecComparison: React.FC = () => {
                 <td className="py-4 px-4 font-bold text-neutral-300">
                   Control 3D / Táctil
                 </td>
-                {IPHONE_PRODUCTS.map((p) => (
+                {displayProducts.map((p) => (
                   <td key={p.id} className="py-4 px-4 text-center">
                     {p.name.includes('16') || p.name.includes('18') ? (
                       <Check className="w-5 h-5 text-emerald-400 mx-auto font-bold" />

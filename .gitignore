@@ -14,6 +14,8 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+*.p12
+loti-cb95f-c05c8618fd54.p12
 
 # Logs
 logs
@@ -34,3 +36,7 @@ pnpm-debug.log*
 *.sln
 *.sw?
 Thumbs.db
+
+# Agent execution files
+.agents/
+

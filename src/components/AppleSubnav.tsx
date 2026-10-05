@@ -28,7 +28,7 @@ export const AppleSubnav: React.FC<AppleSubnavProps> = ({ onOpenOrderModal }) =>
           <a href="#bento" className="hover:text-white transition-colors hidden sm:inline">
             Innovación
           </a>
-          <a href="#catalog" className="hover:text-white transition-colors">
+          <a href="#catalog" className="hover:text-white transition-colors hidden sm:inline">
             Catálogo
           </a>
           <a href="#comparison" className="hover:text-white transition-colors hidden lg:inline">

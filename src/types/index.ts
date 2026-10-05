@@ -29,6 +29,15 @@ export interface iPhoneProduct {
   description: string;
   features: string[];
   image: string;
+  imageUrl?: string;
+  condition?: 'Nuevo (Sellado)' | 'Seminuevo / Excelente' | 'Usado Grado A' | 'Reacondicionado' | string;
+  costPriceUsd?: number;
+  profitUsd?: number;
+  stock?: number;
+  active?: boolean;
+  specs?: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
@@ -51,4 +60,46 @@ export interface OrderFormState {
   selectedStorage: string;
   paymentMethod: 'Transferencia Bancaria' | 'Nequi / Daviplata' | 'Pago Contraentrega' | 'Tarjeta de Crédito';
   notes?: string;
+}
+
+export interface StoreInteraction {
+  id?: string;
+  type: 'whatsapp_order' | 'cart_checkout' | 'product_view' | 'whatsapp_inquiry' | string;
+  productId?: string;
+  productName?: string;
+  color?: string;
+  storage?: string;
+  priceUsd?: number;
+  customerName?: string;
+  customerPhone?: string;
+  customerCity?: string;
+  customerAddress?: string;
+  paymentMethod?: string;
+  notes?: string;
+  cartSummary?: string;
+  status?: 'pending' | 'contacted' | 'completed' | 'cancelled';
+  timestamp?: any;
+  createdAt?: string;
+  createdAtIso?: string;
+  userAgent?: string;
+}
+
+export interface ManualSale {
+  id?: string;
+  productId: string;
+  productName: string;
+  color: string;
+  storage: string;
+  condition?: 'Nuevo (Sellado)' | 'Seminuevo / Excelente' | 'Usado Grado A' | 'Reacondicionado' | string;
+  costPriceUsd?: number;
+  priceUsd: number;
+  quantity: number;
+  totalUsd: number;
+  profitUsd?: number;
+  customerName: string;
+  customerPhone: string;
+  paymentMethod: 'Efectivo' | 'Transferencia' | 'Tarjeta' | 'Otro' | string;
+  notes?: string;
+  timestamp?: any;
+  createdAt?: string;
 }

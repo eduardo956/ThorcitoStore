@@ -1,33 +1,30 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Star, MessageCircle, ShoppingCart } from 'lucide-react';
-import { IPHONE_PRODUCTS } from '../data/iphones';
+import { Check, Star, ShoppingCart, RefreshCw, CloudCheck, AlertCircle, Eye } from 'lucide-react';
+import { useProducts } from '../hooks/useProducts';
 import type { iPhoneProduct, ColorOption, StorageOption, CartItem } from '../types';
+import { ProductDetailModal } from './ProductDetailModal';
 
 interface ProductCatalogProps {
-  onOpenOrderModal: (modelName: string, colorName: string, storageSize: string, calculatedPrice: number) => void;
   onAddToCart: (item: CartItem) => void;
+  onOpenOrderModal?: (modelName: string, colorName: string, storageSize: string, calculatedPrice: number) => void;
 }
 
-export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onOpenOrderModal, onAddToCart }) => {
+export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onAddToCart, onOpenOrderModal }) => {
+  const { products, isLoading, syncStatus } = useProducts();
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [detailProduct, setDetailProduct] = useState<iPhoneProduct | null>(null);
 
+  const seriesOf = (p: iPhoneProduct) => (p.specs?.series as string | undefined) || 'Otros';
+  const seriesList = Array.from(new Set(products.map(seriesOf)));
   const categories = [
     { id: 'all', label: 'Todos los Modelos' },
-    { id: '18', label: 'Serie 18 Pro' },
-    { id: '16-pro', label: 'Serie 16 Pro' },
-    { id: '16', label: 'iPhone 16' },
-    { id: '15', label: 'Serie 15' },
+    ...seriesList.map((s) => ({ id: s, label: s })),
   ];
 
-  const filteredProducts = IPHONE_PRODUCTS.filter((product) => {
-    if (activeCategory === 'all') return true;
-    if (activeCategory === '18') return product.id.includes('18');
-    if (activeCategory === '16-pro') return product.id.includes('16-pro');
-    if (activeCategory === '16') return product.id === 'iphone-16';
-    if (activeCategory === '15') return product.id.includes('15');
-    return true;
-  });
+  const filteredProducts = products.filter(
+    (product) => activeCategory === 'all' || seriesOf(product) === activeCategory
+  );
 
   return (
     <section id="catalog" className="py-24 bg-[#000000] text-[#F5F5F7] relative">
@@ -35,7 +32,27 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onOpenOrderModal
         
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="text-xs font-mono uppercase tracking-widest text-blue-400 font-bold">Apple Store Oficial — Jorgito Store</span>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-xs font-mono uppercase tracking-widest text-blue-400 font-bold">
+              Apple Store Oficial — Jorgito Store
+            </span>
+            {/* Dynamic Status Indicator */}
+            {isLoading && (
+              <span data-testid="catalog-loading" className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/25">
+                <RefreshCw className="w-3 h-3 animate-spin text-blue-400" /> Sincronizando...
+              </span>
+            )}
+            {!isLoading && syncStatus === 'live' && (
+              <span data-testid="catalog-live" className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+                <CloudCheck className="w-3 h-3 text-emerald-400" /> Firestore En Vivo
+              </span>
+            )}
+            {!isLoading && syncStatus === 'error' && (
+              <span data-testid="catalog-error" className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/25">
+                <AlertCircle className="w-3 h-3 text-amber-400" /> Sin conexión
+              </span>
+            )}
+          </div>
           <h2 className="text-4xl sm:text-7xl font-extrabold tracking-tight mt-2">
             <span className="apple-titanium-gradient">Elige tu nuevo iPhone.</span>
           </h2>
@@ -67,29 +84,56 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onOpenOrderModal
             <ProductCard
               key={product.id}
               product={product}
-              onOpenOrderModal={onOpenOrderModal}
               onAddToCart={onAddToCart}
+              onOpenDetails={() => setDetailProduct(product)}
             />
           ))}
         </div>
+
+        {!isLoading && filteredProducts.length === 0 && (
+          <p data-testid="catalog-empty" className="text-center text-[#86868B] text-sm py-16">
+            {syncStatus === 'error'
+              ? 'No pudimos cargar el catálogo. Intenta de nuevo en unos minutos.'
+              : 'Por ahora no hay equipos disponibles. ¡Vuelve pronto!'}
+          </p>
+        )}
+
       </div>
+
+      <ProductDetailModal
+        product={detailProduct}
+        isOpen={!!detailProduct}
+        onClose={() => setDetailProduct(null)}
+        onAddToCart={onAddToCart}
+        onOpenOrderModal={onOpenOrderModal || (() => {})}
+      />
     </section>
   );
 };
 
 interface ProductCardProps {
   product: iPhoneProduct;
-  onOpenOrderModal: (modelName: string, colorName: string, storageSize: string, calculatedPrice: number) => void;
   onAddToCart: (item: CartItem) => void;
+  onOpenDetails: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenOrderModal, onAddToCart }) => {
-  const [selectedColor, setSelectedColor] = useState<ColorOption>(product.colors[0]);
-  const [selectedStorage, setSelectedStorage] = useState<StorageOption>(product.storageOptions[0]);
+const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenDetails }) => {
+  const defaultColor = (product.colors && product.colors.length > 0)
+    ? product.colors[0]
+    : { id: 'default', name: 'Color Estándar', hex: '#9F9D98', bgGradient: 'from-neutral-700 to-black', imageUrl: product.image };
 
-  const currentPrice = product.basePrice + selectedStorage.priceDelta;
+  const defaultStorage = (product.storageOptions && product.storageOptions.length > 0)
+    ? product.storageOptions[0]
+    : { size: '128 GB', priceDelta: 0 };
+
+  const [selectedColor, setSelectedColor] = useState<ColorOption>(defaultColor);
+  const [selectedStorage, setSelectedStorage] = useState<StorageOption>(defaultStorage);
+
+  const currentPrice = product.basePrice + (selectedStorage?.priceDelta || 0);
+  const isOutOfStock = product.stock !== undefined && product.stock <= 0;
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
     onAddToCart({
       id: `${product.id}-${selectedColor.id}-${selectedStorage.size}-${Date.now()}`,
       productId: product.id,
@@ -108,36 +152,47 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenOrderModal, on
       viewport={{ once: true }}
       className="apple-card apple-card-hover p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-[#161617]"
     >
-      {/* Badge */}
-      {product.badge && (
-        <div className="absolute top-6 right-6 px-3.5 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold tracking-wide">
-          {product.badge}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        {/* Rating & Stock */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold">
+            <Star className="w-4 h-4 fill-amber-400" />
+            <span>{product.rating}</span>
+            <span className="text-[#86868B] hidden sm:inline">({product.reviewsCount} reseñas)</span>
+            <span className="text-[#86868B] sm:hidden">({product.reviewsCount})</span>
+          </div>
+
+          {product.stock !== undefined && (
+            <span className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ${
+              product.stock > 5
+                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                : product.stock > 0
+                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+            }`}>
+              {product.stock > 0 ? `${product.stock} disponibles` : 'Agotado'}
+            </span>
+          )}
         </div>
-      )}
+
+      </div>
 
       <div>
-        {/* Rating */}
-        <div className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold mb-2">
-          <Star className="w-4 h-4 fill-amber-400" />
-          <span>{product.rating}</span>
-          <span className="text-[#86868B]">({product.reviewsCount} opiniones verificadas)</span>
-        </div>
-
         {/* Title */}
         <h3 className="text-3xl font-extrabold text-white">{product.name}</h3>
         <p className="text-xs font-mono text-blue-400 mt-0.5">{product.tagline}</p>
 
         {/* Product Preview Image & Color Selector */}
         <div className="my-6 relative flex flex-col items-center">
-          <div className="relative w-48 sm:w-60 aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b from-neutral-900 to-black p-3 border border-white/10">
+          <div className="relative w-full aspect-square max-h-[260px] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b from-neutral-900 to-black p-4 border border-white/10 flex items-center justify-center">
             <motion.img
               key={selectedColor.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              src={selectedColor.imageUrl}
+              src={selectedColor.imageUrl || product.image}
               alt={`${product.name} - ${selectedColor.name}`}
-              className="w-full h-full object-cover rounded-2xl"
+              className="max-h-full max-w-full object-contain rounded-2xl drop-shadow-2xl"
             />
           </div>
 
@@ -205,23 +260,29 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onOpenOrderModal, on
           <span className="text-3xl font-black text-white">${currentPrice} <span className="text-xs text-[#86868B] font-normal">USD</span></span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <button
-            onClick={handleAddToCart}
-            className="w-full py-3.5 rounded-full bg-neutral-800 hover:bg-neutral-700 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 border border-white/15"
+            onClick={onOpenDetails}
+            className="w-full py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white border border-white/15"
           >
-            <ShoppingCart className="w-4 h-4 text-blue-400" />
-            Añadir al Carrito
+            <Eye className="w-4 h-4 text-blue-400" />
+            Ver Detalles
           </button>
 
           <button
-            onClick={() => onOpenOrderModal(product.name, selectedColor.name, selectedStorage.size, currentPrice)}
-            className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all shadow-lg shadow-emerald-950/40 hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className={`w-full py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border ${
+              isOutOfStock
+                ? 'bg-neutral-900 text-neutral-500 border-white/5 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-400/30'
+            }`}
           >
-            <MessageCircle className="w-4 h-4 fill-white" />
-            Comprar por WhatsApp
+            <ShoppingCart className="w-4 h-4" />
+            {isOutOfStock ? 'Sin Existencias' : 'Añadir al Carrito'}
           </button>
         </div>
+
       </div>
     </motion.div>
   );

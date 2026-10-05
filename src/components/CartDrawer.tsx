@@ -4,6 +4,7 @@ import { X, ShoppingBag, Trash2, Send, ShieldCheck, Truck, Sparkles } from 'luci
 import confetti from 'canvas-confetti';
 import type { CartItem } from '../types';
 import { STORE_PHONE_NUMBER } from '../data/iphones';
+import { logStoreInteraction } from '../lib/interactions';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -34,6 +35,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       spread: 90,
       origin: { y: 0.6 },
       colors: ['#0071E3', '#10b981', '#ffffff', '#f59e0b'],
+    });
+
+    // Asynchronously record cart checkout to Firestore
+    const itemsSummary = cartItems
+      .map((i) => `${i.quantity}x ${i.productName} (${i.color.name}, ${i.storage.size})`)
+      .join(', ');
+
+    logStoreInteraction({
+      type: 'cart_checkout',
+      productId: 'cart_bundle',
+      productName: `Carrito (${cartItems.reduce((a, i) => a + i.quantity, 0)} ítems)`,
+      color: 'Varios',
+      storage: 'Varios',
+      priceUsd: total,
+      customerName: 'Cliente Carrito',
+      customerPhone: 'N/A (WhatsApp Direct)',
+      customerCity: 'N/A (Coordinación WhatsApp)',
+      paymentMethod: 'Por coordinar',
+      cartSummary: itemsSummary,
+      notes: 'Checkout generado desde CartDrawer',
     });
 
     let msg = `*¡Hola Jorgito Store! 🛒 Quisiera realizar la compra de mi Carrito:*\n\n`;

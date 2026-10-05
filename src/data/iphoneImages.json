@@ -1,0 +1,129 @@
+{
+ "iphone-11": {},
+ "iphone-11-pro": {},
+ "iphone-11-pro-max": {},
+ "iphone-se-2nd-generation-2020": {},
+ "iphone-12-mini": {
+  "blue": "iphone-12-finish-select-202207-5-4inch-blue",
+  "black": "iphone-12-finish-select-202207-5-4inch-black",
+  "purple": "iphone-12-finish-select-202207-5-4inch-purple",
+  "white": "iphone-12-finish-select-202207-5-4inch-white",
+  "green": "iphone-12-finish-select-202207-5-4inch-green"
+ },
+ "iphone-12": {
+  "blue": "iphone-12-finish-select-202207-6-1inch-blue",
+  "black": "iphone-12-finish-select-202207-6-1inch-black",
+  "purple": "iphone-12-finish-select-202207-6-1inch-purple",
+  "green": "iphone-12-finish-select-202207-6-1inch-green",
+  "white": "iphone-12-finish-select-202207-6-1inch-white"
+ },
+ "iphone-12-pro": {},
+ "iphone-12-pro-max": {},
+ "iphone-13-mini": {
+  "blue": "iphone-13-finish-select-202207-5-4inch-blue",
+  "starlight": "iphone-13-finish-select-202207-5-4inch-starlight",
+  "pink": "iphone-13-finish-select-202207-5-4inch-pink",
+  "green": "iphone-13-finish-select-202207-5-4inch-green",
+  "midnight": "iphone-13-finish-select-202207-5-4inch-midnight"
+ },
+ "iphone-13": {
+  "pink": "iphone-13-finish-select-202207-6-1inch-pink",
+  "starlight": "iphone-13-finish-select-202207-6-1inch-starlight",
+  "blue": "iphone-13-finish-select-202207-6-1inch-blue",
+  "midnight": "iphone-13-finish-select-202207-6-1inch-midnight",
+  "green": "iphone-13-finish-select-202207-6-1inch-green"
+ },
+ "iphone-13-pro": {
+  "sierrablue": "iphone-13-pro-finish-select-202207-6-1inch-sierrablue",
+  "gold": "iphone-13-pro-finish-select-202207-6-1inch-gold",
+  "silver": "iphone-13-pro-finish-select-202207-6-1inch-silver",
+  "graphite": "iphone-13-pro-finish-select-202207-6-1inch-graphite",
+  "alpinegreen": "iphone-13-pro-finish-select-202207-6-1inch-alpinegreen"
+ },
+ "iphone-13-pro-max": {
+  "sierrablue": "iphone-13-pro-finish-select-202207-6-7inch-sierrablue",
+  "graphite": "iphone-13-pro-finish-select-202207-6-7inch-graphite",
+  "gold": "iphone-13-pro-finish-select-202207-6-7inch-gold",
+  "silver": "iphone-13-pro-finish-select-202207-6-7inch-silver",
+  "alpinegreen": "iphone-13-pro-finish-select-202207-6-7inch-alpinegreen"
+ },
+ "iphone-se-3rd-generation-2022": {},
+ "iphone-14": {
+  "yellow": "iphone-14-finish-select-202209-6-1inch-yellow",
+  "blue": "iphone-14-finish-select-202209-6-1inch-blue",
+  "purple": "iphone-14-finish-select-202209-6-1inch-purple",
+  "midnight": "iphone-14-finish-select-202209-6-1inch-midnight",
+  "starlight": "iphone-14-finish-select-202209-6-1inch-starlight"
+ },
+ "iphone-14-plus": {
+  "starlight": "iphone-14-finish-select-202209-6-7inch-starlight",
+  "purple": "iphone-14-finish-select-202209-6-7inch-purple",
+  "blue": "iphone-14-finish-select-202209-6-7inch-blue",
+  "yellow": "iphone-14-finish-select-202209-6-7inch-yellow",
+  "midnight": "iphone-14-finish-select-202209-6-7inch-midnight"
+ },
+ "iphone-14-pro": {
+  "silver": "iphone-14-pro-finish-select-202209-6-1inch-silver",
+  "deeppurple": "iphone-14-pro-finish-select-202209-6-1inch-deeppurple",
+  "spaceblack": "iphone-14-pro-finish-select-202209-6-1inch-spaceblack",
+  "gold": "iphone-14-pro-finish-select-202209-6-1inch-gold"
+ },
+ "iphone-14-pro-max": {
+  "deeppurple": "iphone-14-pro-finish-select-202209-6-7inch-deeppurple",
+  "spaceblack": "iphone-14-pro-finish-select-202209-6-7inch-spaceblack",
+  "silver": "iphone-14-pro-finish-select-202209-6-7inch-silver",
+  "gold": "iphone-14-pro-finish-select-202209-6-7inch-gold"
+ },
+ "iphone-15": {
+  "yellow": "iphone-15-finish-select-202309-6-1inch-yellow",
+  "blue": "iphone-15-finish-select-202309-6-1inch-blue",
+  "green": "iphone-15-finish-select-202309-6-1inch-green",
+  "pink": "iphone-15-finish-select-202309-6-1inch-pink",
+  "black": "iphone-15-finish-select-202309-6-1inch-black"
+ },
+ "iphone-15-plus": {
+  "blue": "iphone-15-finish-select-202309-6-7inch-blue",
+  "pink": "iphone-15-finish-select-202309-6-7inch-pink",
+  "yellow": "iphone-15-finish-select-202309-6-7inch-yellow",
+  "green": "iphone-15-finish-select-202309-6-7inch-green",
+  "black": "iphone-15-finish-select-202309-6-7inch-black"
+ },
+ "iphone-15-pro": {
+  "naturaltitanium": "iphone-15-pro-finish-select-202309-6-1inch-naturaltitanium",
+  "whitetitanium": "iphone-15-pro-finish-select-202309-6-1inch-whitetitanium",
+  "bluetitanium": "iphone-15-pro-finish-select-202309-6-1inch-bluetitanium",
+  "blacktitanium": "iphone-15-pro-finish-select-202309-6-1inch-blacktitanium"
+ },
+ "iphone-15-pro-max": {
+  "blacktitanium": "iphone-15-pro-finish-select-202309-6-7inch-blacktitanium",
+  "naturaltitanium": "iphone-15-pro-finish-select-202309-6-7inch-naturaltitanium",
+  "whitetitanium": "iphone-15-pro-finish-select-202309-6-7inch-whitetitanium",
+  "bluetitanium": "iphone-15-pro-finish-select-202309-6-7inch-bluetitanium"
+ },
+ "iphone-16": {
+  "white": "iphone-16-finish-select-202409-6-1inch-white",
+  "ultramarine": "iphone-16-finish-select-202409-6-1inch-ultramarine",
+  "pink": "iphone-16-finish-select-202409-6-1inch-pink",
+  "black": "iphone-16-finish-select-202409-6-1inch-black",
+  "teal": "iphone-16-finish-select-202409-6-1inch-teal"
+ },
+ "iphone-16-plus": {
+  "pink": "iphone-16-finish-select-202409-6-7inch-pink",
+  "teal": "iphone-16-finish-select-202409-6-7inch-teal",
+  "black": "iphone-16-finish-select-202409-6-7inch-black",
+  "white": "iphone-16-finish-select-202409-6-7inch-white",
+  "ultramarine": "iphone-16-finish-select-202409-6-7inch-ultramarine"
+ },
+ "iphone-16-pro": {
+  "naturaltitanium": "iphone-16-pro-finish-select-202409-6-3inch-naturaltitanium",
+  "deserttitanium": "iphone-16-pro-finish-select-202409-6-3inch-deserttitanium",
+  "whitetitanium": "iphone-16-pro-finish-select-202409-6-3inch-whitetitanium",
+  "blacktitanium": "iphone-16-pro-finish-select-202409-6-3inch-blacktitanium"
+ },
+ "iphone-16-pro-max": {
+  "blacktitanium": "iphone-16-pro-finish-select-202409-6-9inch-blacktitanium",
+  "deserttitanium": "iphone-16-pro-finish-select-202409-6-9inch-deserttitanium",
+  "naturaltitanium": "iphone-16-pro-finish-select-202409-6-9inch-naturaltitanium",
+  "whitetitanium": "iphone-16-pro-finish-select-202409-6-9inch-whitetitanium"
+ }
+}
