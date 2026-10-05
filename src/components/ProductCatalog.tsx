@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Star, ShoppingCart, RefreshCw, CloudCheck, AlertCircle, Eye } from 'lucide-react';
+import { Star, ShoppingCart, RefreshCw, CloudCheck, AlertCircle, Eye } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import type { iPhoneProduct, ColorOption, StorageOption, CartItem } from '../types';
 import { ProductDetailModal } from './ProductDetailModal';
@@ -29,7 +29,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onAddToCart, onO
   return (
     <section id="catalog" className="py-24 bg-[#000000] text-[#F5F5F7] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -67,11 +67,10 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onAddToCart, onO
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                activeCategory === cat.id
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105'
-                  : 'bg-[#161617] text-[#86868B] hover:text-white border border-white/10 hover:border-white/25'
-              }`}
+              className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeCategory === cat.id
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 scale-105'
+                : 'bg-[#161617] text-[#86868B] hover:text-white border border-white/10 hover:border-white/25'
+                }`}
             >
               {cat.label}
             </button>
@@ -105,7 +104,7 @@ export const ProductCatalog: React.FC<ProductCatalogProps> = ({ onAddToCart, onO
         isOpen={!!detailProduct}
         onClose={() => setDetailProduct(null)}
         onAddToCart={onAddToCart}
-        onOpenOrderModal={onOpenOrderModal || (() => {})}
+        onOpenOrderModal={onOpenOrderModal || (() => { })}
       />
     </section>
   );
@@ -163,13 +162,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
           </div>
 
           {product.stock !== undefined && (
-            <span className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ${
-              product.stock > 5
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                : product.stock > 0
+            <span className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ${product.stock > 5
+              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+              : product.stock > 0
                 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                 : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-            }`}>
+              }`}>
               {product.stock > 0 ? `${product.stock} disponibles` : 'Agotado'}
             </span>
           )}
@@ -184,15 +182,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
 
         {/* Product Preview Image & Color Selector */}
         <div className="my-6 relative flex flex-col items-center">
-          <div className="relative w-full aspect-square max-h-[260px] rounded-3xl overflow-hidden shadow-2xl bg-gradient-to-b from-neutral-900 to-black p-4 border border-white/10 flex items-center justify-center">
+          <div className="relative w-full aspect-[3/4] max-h-[300px] rounded-3xl overflow-hidden shadow-2xl bg-[#0f0f10] border border-white/10 flex items-center justify-center p-2">
             <motion.img
               key={selectedColor.id}
               initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              animate={{ opacity: 1, scale: 1.15 }}
               transition={{ duration: 0.3 }}
               src={selectedColor.imageUrl || product.image}
               alt={`${product.name} - ${selectedColor.name}`}
-              className="max-h-full max-w-full object-contain rounded-2xl drop-shadow-2xl"
+              className="max-h-full max-w-full object-contain scale-[2] transform transition-transform duration-300 drop-shadow-2xl"
+              style={{ mixBlendMode: 'lighten' }}
             />
           </div>
 
@@ -202,11 +201,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
               <button
                 key={color.id}
                 onClick={() => setSelectedColor(color)}
-                className={`w-7 h-7 rounded-full transition-all border ${
-                  selectedColor.id === color.id
-                    ? 'ring-2 ring-blue-500 scale-110 border-white shadow-md'
-                    : 'border-white/20 opacity-70 hover:opacity-100'
-                }`}
+                className={`w-7 h-7 rounded-full transition-all border ${selectedColor.id === color.id
+                  ? 'ring-2 ring-blue-500 scale-110 border-white shadow-md'
+                  : 'border-white/20 opacity-70 hover:opacity-100'
+                  }`}
                 style={{ backgroundColor: color.hex }}
                 title={color.name}
               />
@@ -227,11 +225,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
               <button
                 key={storage.size}
                 onClick={() => setSelectedStorage(storage)}
-                className={`py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all text-center ${
-                  selectedStorage.size === storage.size
-                    ? 'bg-blue-600 border-blue-400 text-white shadow-lg'
-                    : 'bg-black/60 border-white/10 text-neutral-300 hover:border-white/30'
-                }`}
+                className={`py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all text-center ${selectedStorage.size === storage.size
+                  ? 'bg-blue-600 border-blue-400 text-white shadow-lg'
+                  : 'bg-black/60 border-white/10 text-neutral-300 hover:border-white/30'
+                  }`}
               >
                 <div>{storage.size}</div>
                 {storage.priceDelta > 0 && (
@@ -242,15 +239,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
           </div>
         </div>
 
-        {/* Key Features List */}
-        <ul className="space-y-2 mb-8 text-xs text-[#86868B]">
-          {product.features.map((feat, idx) => (
-            <li key={idx} className="flex items-start gap-2">
-              <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 font-bold" />
+        {/* Compact Spec Badges (UX Pro Max - Non-cluttered) */}
+        <div className="flex flex-wrap gap-1.5 mb-6">
+          {product.features.slice(0, 4).map((feat, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-[11px] font-medium text-neutral-300"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               <span>{feat}</span>
-            </li>
+            </span>
           ))}
-        </ul>
+          {product.features.length > 4 && (
+            <button
+              onClick={onOpenDetails}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[11px] font-bold text-blue-400 hover:bg-blue-500/20 transition-colors"
+            >
+              +{product.features.length - 4} más
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Footer Price & Action Buttons */}
@@ -272,11 +280,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart, onOpenD
           <button
             onClick={handleAddToCart}
             disabled={isOutOfStock}
-            className={`w-full py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border ${
-              isOutOfStock
-                ? 'bg-neutral-900 text-neutral-500 border-white/5 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-400/30'
-            }`}
+            className={`w-full py-3 rounded-full font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 border ${isOutOfStock
+              ? 'bg-neutral-900 text-neutral-500 border-white/5 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-400/30'
+              }`}
           >
             <ShoppingCart className="w-4 h-4" />
             {isOutOfStock ? 'Sin Existencias' : 'Añadir al Carrito'}

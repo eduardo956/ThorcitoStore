@@ -106,25 +106,26 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {/* Image Preview & Swatches */}
               <div className="flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-black p-6 rounded-3xl border border-white/10 relative">
                 {product.condition && (
-                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold">
+                  <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-semibold backdrop-blur-md">
                     ✨ {product.condition}
                   </span>
                 )}
                 {product.badge && (
-                  <span className="absolute top-4 right-4 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold">
+                  <span className="absolute top-4 right-4 z-10 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-xs font-semibold backdrop-blur-md">
                     {product.badge}
                   </span>
                 )}
 
-                <div className="w-full aspect-square relative max-h-[320px] flex items-center justify-center p-2">
+                <div className="w-full aspect-[3/4] relative max-h-[340px] rounded-2xl bg-[#0f0f10] overflow-hidden flex items-center justify-center p-2 border border-white/10">
                   <motion.img
                     key={selectedColor.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1.15 }}
                     transition={{ duration: 0.3 }}
                     src={selectedColor.imageUrl || product.image}
                     alt={`${product.name} - ${selectedColor.name}`}
-                    className="max-h-full max-w-full object-contain rounded-2xl drop-shadow-2xl"
+                    className="max-h-full max-w-full object-contain scale-[1.15] transform drop-shadow-2xl"
+                    style={{ mixBlendMode: 'lighten' }}
                   />
                 </div>
 
